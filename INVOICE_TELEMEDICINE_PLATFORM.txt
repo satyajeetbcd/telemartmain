@@ -1,0 +1,209 @@
+================================================================================
+                              INVOICE
+================================================================================
+
+Invoice Number: INV-TM-2025-001
+Invoice Date: [CURRENT DATE]
+Due Date: [DUE DATE - 15 days from invoice date]
+
+================================================================================
+BILL TO:
+================================================================================
+[Client Company Name]
+[Client Address]
+[City, State, PIN Code]
+[Contact Person]
+[Email Address]
+[Phone Number]
+
+================================================================================
+PROJECT DETAILS
+================================================================================
+Project Name: Telemedicine Platform with Zoom Integration
+Project Duration: 3 Months (Accelerated Timeline)
+Project Start Date: [TO BE CONFIRMED]
+Expected Completion Date: [3 MONTHS FROM START DATE]
+
+================================================================================
+SERVICES & CHARGES
+================================================================================
+
+1. DEVELOPMENT SERVICES
+   ──────────────────────────────────────────────────────────────────────────
+   Senior Laravel Developer (3 months @ ₹300/hour, 40 hours/week)
+   Duration: 12 weeks × 40 hours = 480 hours
+   Rate: ₹300 per hour
+   Subtotal: ₹144,000
+
+   UI/UX Designer (1.5 months @ ₹150/hour, 40 hours/week)
+   Duration: 6 weeks × 40 hours = 240 hours
+   Rate: ₹150 per hour
+   Subtotal: ₹36,000
+
+   Mobile App Developer (1.5 months @ ₹150/hour, 40 hours/week)
+   Duration: 6 weeks × 40 hours = 240 hours
+   Rate: ₹150 per hour
+   Subtotal: ₹36,000
+
+   Development Services Total: ₹216,000
+   ──────────────────────────────────────────────────────────────────────────
+
+================================================================================
+PAYMENT SUMMARY
+================================================================================
+
+   Development Services:                    ₹216,000
+   ──────────────────────────────────────────────────────────────────────────
+   GRAND TOTAL:                             ₹216,000
+   ──────────────────────────────────────────────────────────────────────────
+
+================================================================================
+PAYMENT SCHEDULE (WEEKLY PAYMENT PLAN)
+================================================================================
+
+WEEK 1: Project Initiation
+   Payment: ₹21,600 (10% of total)
+   Due Date: [END OF WEEK 1]
+
+WEEK 2: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 2]
+
+WEEK 3: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 3]
+
+WEEK 4: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 4]
+
+WEEK 5: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 5]
+
+WEEK 6: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 6]
+
+WEEK 7: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 7]
+
+WEEK 8: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 8]
+
+WEEK 9: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 9]
+
+WEEK 10: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 10]
+
+WEEK 11: Development Progress
+   Payment: ₹15,120 (7% of total)
+   Due Date: [END OF WEEK 11]
+
+WEEK 12: Final Payment & Project Completion
+   Payment: ₹43,200 (20% of total)
+   Due Date: [END OF WEEK 12]
+
+   ──────────────────────────────────────────────────────────────────────────
+   TOTAL PAYMENT: ₹216,000
+   ──────────────────────────────────────────────────────────────────────────
+
+Payment Breakdown:
+   • Week 1 (Initial): 10% = ₹21,600
+   • Weeks 2-11 (Weekly): 7% each = ₹15,120 × 10 weeks = ₹151,200
+   • Week 12 (Final): 20% = ₹43,200
+   • Total: 100% = ₹216,000
+
+================================================================================
+PAYMENT TERMS
+================================================================================
+
+• Payment Method: Bank Transfer / NEFT / RTGS / UPI
+• Payment Schedule: Weekly payments as per the payment schedule above
+• First Payment: 10% (₹21,600) due at project start (Week 1)
+• Weekly Payments: 7% (₹15,120) due at the end of each week (Weeks 2-11)
+• Final Payment: 20% (₹43,200) due upon project completion (Week 12)
+• Late Payment: 2% interest per month on overdue amounts
+• All payments should be made in Indian Rupees (INR)
+• Tax Invoice: GST will be applicable as per government regulations
+
+================================================================================
+BANK DETAILS
+================================================================================
+
+
+UPI ID: 9794613975@upi
+
+================================================================================
+PROJECT SCOPE INCLUDES
+================================================================================
+
+✓ Super Admin Panel (Vue.js 3 with Vuetify)
+✓ Doctor Web Application (Vue.js 3)
+✓ Patient Mobile Application (React Native with Expo)
+✓ Laravel 12 Backend with RESTful APIs
+✓ Zoom SDK Integration for video consultations
+✓ Payment Gateway Integration (Razorpay/Stripe)
+✓ Real-time notifications and chat
+✓ User authentication and role management
+✓ Appointment scheduling system
+✓ Medical records management
+✓ Prescription management
+✓ Analytics and reporting dashboards
+✓ Complete source code and documentation
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+1. This invoice is based on the 3-month accelerated timeline requiring:
+   • 50+ hours/week commitment from core developers
+   • Parallel development tracks
+   • Experienced senior developers
+
+2. Any scope changes or additional features beyond the agreed project plan
+   will be billed separately at standard hourly rates.
+
+3. This invoice covers development services only. Infrastructure costs,
+   third-party service subscriptions, app store registrations, and security
+   audits are not included and will be billed separately if required.
+
+4. Post-launch support and maintenance can be arranged separately as per
+   client requirements.
+
+5. Project timeline is subject to:
+   • Timely client feedback and approvals
+   • Availability of required resources
+   • Third-party service availability
+
+================================================================================
+CONTACT INFORMATION
+================================================================================
+
+Project Manager: satyajeet kumar singh
+Email: satyajeet18@ymail.com
+Phone: +91-9794613975
+
+
+Address:
+Niyaisipur babhaniyav Rajatalab Varanasi 221311
+
+
+================================================================================
+THANK YOU FOR YOUR BUSINESS
+================================================================================
+
+We look forward to working with you on this exciting telemedicine platform
+project. Please make payments as per the weekly payment schedule to ensure
+smooth project execution and continuous development progress.
+
+For any queries or clarifications, please contact us at the above details.
+
+================================================================================
+                              END OF INVOICE
+================================================================================
