@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Patient;
 use App\Models\User;
+use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -110,7 +111,13 @@ class PatientManagementController extends Controller
      */
     public function show(Patient $patient)
     {
-        $patient->load('user');
+        $patient->load(['user', 'medicalRecords' => function ($q) {
+            $q->with('doctor')->latest('record_date')->latest('id');
+        }, 'prescriptions' => function ($q) {
+            $q->with(['doctor', 'items'])->latest('prescription_date')->latest('id');
+        }, 'appointments' => function ($q) {
+            $q->with('doctor')->latest('appointment_date')->latest('appointment_time')->latest('id');
+        }]);
         return view('patients.show', compact('patient'));
     }
 
@@ -119,8 +126,15 @@ class PatientManagementController extends Controller
      */
     public function edit(Patient $patient)
     {
-        $patient->load('user');
-        return view('patients.edit', compact('patient'));
+        $patient->load(['user', 'medicalRecords' => function ($q) {
+            $q->with('doctor')->latest('record_date')->latest('id');
+        }, 'prescriptions' => function ($q) {
+            $q->with(['doctor', 'items'])->latest('prescription_date')->latest('id');
+        }, 'appointments' => function ($q) {
+            $q->with('doctor')->latest('appointment_date')->latest('appointment_time')->latest('id');
+        }]);
+        $doctors = User::role('Doctor')->orderBy('name')->get();
+        return view('patients.edit', compact('patient', 'doctors'));
     }
 
     /**

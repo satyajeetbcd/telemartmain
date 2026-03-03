@@ -67,6 +67,16 @@ class Appointment extends BaseModel
         return $this->hasOne(DoctorReview::class, 'appointment_id');
     }
 
+    public function medicalRecords()
+    {
+        return $this->hasMany(MedicalRecord::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
     /**
      * Generate unique appointment number
      */

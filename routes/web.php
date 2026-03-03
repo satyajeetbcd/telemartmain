@@ -15,6 +15,8 @@ use App\Http\Controllers\AdminDoctorProfileController;
 use App\Http\Controllers\DoctorAvailabilityController;
 use App\Http\Controllers\AdminDoctorAvailabilityController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\PrescriptionController;
 
 // Public routes for invitation acceptance
 Route::get('/invitations/accept/{token}', [InvitationController::class, 'showAcceptForm'])->name('invitations.accept');
@@ -62,6 +64,16 @@ Route::middleware('auth')->group(function () {
     // Appointment routes
     Route::resource('appointments', AppointmentController::class);
     Route::get('/appointments/slots/available', [AppointmentController::class, 'getAvailableSlots'])->name('appointments.available-slots');
+    Route::post('/appointments/{appointment}/mark-paid', [AppointmentController::class, 'markPaymentReceived'])->name('appointments.mark-paid');
+
+    // Medical Records routes
+    Route::resource('medical-records', MedicalRecordController::class);
+    Route::get('/medical-records/{medical_record}/download/{attachment}', [MedicalRecordController::class, 'download'])->name('medical-records.download');
+    Route::get('/api/medical-records/appointments', [MedicalRecordController::class, 'getAppointments'])->name('medical-records.appointments');
+
+    // Prescription routes
+    Route::resource('prescriptions', PrescriptionController::class);
+    Route::get('/api/prescriptions/appointments', [PrescriptionController::class, 'getAppointments'])->name('prescriptions.appointments');
 
     // Review routes
     Route::get('/doctors/{doctor}/reviews', [ReviewController::class, 'index'])->name('reviews.index');

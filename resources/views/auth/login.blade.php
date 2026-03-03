@@ -11,23 +11,10 @@
     <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
             <div class="text-center">
-                <div class="flex justify-center items-center space-x-3 mb-4">
-                    <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <div class="flex items-center">
-                        <svg class="w-12 h-12 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                    </div>
+                <div class="flex justify-center mb-6">
+                    <img src="{{ asset('images/logo.png') }}" alt="Tele Health Mart" class="h-20 w-auto object-contain">
                 </div>
-                <div class="flex flex-col items-center">
-                    <h1 class="text-3xl font-bold text-green-600">Tele</h1>
-                    <h2 class="text-xl text-green-600 -mt-1">Health Mart</h2>
-                </div>
-                <h3 class="mt-6 text-2xl font-extrabold text-gray-900">Sign in to your account</h3>
+                <h3 class="mt-2 text-2xl font-extrabold text-gray-900">Sign in to your account</h3>
             </div>
             <form class="mt-8 space-y-6" action="{{ route('login') }}" method="POST">
                 @csrf

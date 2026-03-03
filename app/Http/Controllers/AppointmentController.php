@@ -125,6 +125,7 @@ class AppointmentController extends Controller
             'reason' => $validated['reason'] ?? null,
             'consultation_fee' => $consultationFee,
             'status' => 'pending',
+            'payment_status' => 'pending',
         ]);
 
         return redirect()->route('appointments.show', $appointment)
@@ -149,7 +150,25 @@ class AppointmentController extends Controller
         }
 
         $appointment->load(['patient', 'doctor']);
-        return view('appointments.show', compact('appointment'));
+
+        $patientPrescriptions = collect();
+        $patientMedicalRecords = collect();
+        $canManagePatient = ($user->hasRole('Doctor') && $appointment->doctor_id === $user->id)
+            || $user->hasRole('Super Admin');
+        if ($canManagePatient && $appointment->payment_status === 'paid') {
+            $patientPrescriptions = \App\Models\Prescription::where('patient_id', $appointment->patient_id)
+                ->with(['doctor', 'items'])
+                ->latest('prescription_date')
+                ->take(5)
+                ->get();
+            $patientMedicalRecords = \App\Models\MedicalRecord::where('patient_id', $appointment->patient_id)
+                ->with('doctor')
+                ->latest('record_date')
+                ->take(5)
+                ->get();
+        }
+
+        return view('appointments.show', compact('appointment', 'patientPrescriptions', 'patientMedicalRecords', 'canManagePatient'));
     }
 
     /**
@@ -213,6 +232,44 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Mark payment as received for an appointment. When paid, appointment is confirmed (success) for doctor and patient.
+     */
+    public function markPaymentReceived(Appointment $appointment)
+    {
+        $user = Auth::user();
+
+        $canMark = $user->hasRole('Doctor') && $appointment->doctor_id === $user->id
+            || $user->hasRole('Super Admin')
+            || $user->hasRole('Administrator')
+            || $user->hasRole('Receptionist');
+
+        if (!$canMark) {
+            abort(403, 'You are not allowed to mark payment for this appointment.');
+        }
+
+        if ($appointment->payment_status === 'paid') {
+            return redirect()->route('appointments.show', $appointment)
+                ->with('info', 'Payment was already marked as received.');
+        }
+
+        $appointment->payment_status = 'paid';
+        $appointment->save();
+
+        if ($appointment->status === 'pending') {
+            $appointment->update([
+                'status' => 'confirmed',
+                'confirmed_at' => now(),
+            ]);
+            if (!$appointment->zoom_meeting_id) {
+                $this->createZoomMeeting($appointment);
+            }
+        }
+
+        return redirect()->route('appointments.show', $appointment)
+            ->with('success', 'Payment marked as received. Appointment is now confirmed and visible as success to doctor and patient.');
+    }
+
+    /**
      * Remove the specified appointment
      */
     public function destroy(Appointment $appointment)
@@ -253,7 +310,6 @@ class AppointmentController extends Controller
 
         return response()->json([
             'available_slots' => array_values($availableSlots),
-            'booked_slots' => $bookedSlots,
         ]);
     }
 

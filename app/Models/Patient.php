@@ -57,6 +57,16 @@ class Patient extends BaseModel
         return $this->hasMany(DoctorReview::class, 'patient_id');
     }
 
+    public function medicalRecords()
+    {
+        return $this->hasMany(MedicalRecord::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
     /**
      * Get the full name attribute
      */
