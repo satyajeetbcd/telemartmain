@@ -21,9 +21,20 @@
             <h2 class="text-2xl font-bold text-gray-900">Appointment Details</h2>
             <p class="text-gray-600 mt-1">Appointment #{{ $appointment->appointment_number }}</p>
         </div>
-        <a href="{{ route('appointments.index') }}" class="text-green-600 hover:text-green-700 text-sm font-medium">
-            ← Back to Appointments
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('appointments.invoice', $appointment) }}"
+                class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 text-sm font-medium">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Generate Invoice
+            </a>
+            <a href="{{ route('appointments.index') }}" class="text-green-600 hover:text-green-700 text-sm font-medium">
+                ← Back to Appointments
+            </a>
+        </div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-6">
@@ -153,25 +164,109 @@
         </div>
         @endif
 
+        {{-- ── Video Consultation ── --}}
         @if($appointment->zoom_join_url)
         <div class="mt-6 pt-6 border-t border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Video Consultation</h3>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-gray-700 mb-3">Join the video consultation using the link below:</p>
-                <div class="space-y-2">
-                    <a href="{{ $appointment->zoom_join_url }}" target="_blank" 
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        Join Zoom Meeting
-                    </a>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                Video Consultation
+            </h3>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-5 space-y-4">
+
+                {{-- Meeting details row --}}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    @if($appointment->zoom_meeting_id)
+                    <div class="bg-white rounded-lg p-3 border border-blue-100">
+                        <p class="text-xs text-gray-500 mb-1">Meeting ID</p>
+                        <p class="font-mono font-semibold text-gray-800 text-sm">{{ $appointment->zoom_meeting_id }}</p>
+                    </div>
+                    @endif
                     @if($appointment->zoom_meeting_password)
-                    <p class="text-xs text-gray-600 mt-2">
-                        <strong>Meeting Password:</strong> {{ $appointment->zoom_meeting_password }}
-                    </p>
+                    <div class="bg-white rounded-lg p-3 border border-blue-100">
+                        <p class="text-xs text-gray-500 mb-1">Password</p>
+                        <p class="font-mono font-semibold text-gray-800 text-sm">{{ $appointment->zoom_meeting_password }}</p>
+                    </div>
+                    @endif
+                    <div class="bg-white rounded-lg p-3 border border-blue-100">
+                        <p class="text-xs text-gray-500 mb-1">Scheduled</p>
+                        <p class="font-semibold text-gray-800 text-sm">
+                            {{ $appointment->appointment_date->format('M d, Y') }}<br>
+                            <span class="text-gray-600">{{ date('h:i A', strtotime($appointment->appointment_time)) }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Call buttons --}}
+                <div class="flex flex-wrap gap-3 items-center">
+                    @if(Auth::user()->hasRole('Doctor') && $appointment->doctor_id === Auth::id())
+
+                        {{-- Doctor: Start as host --}}
+                        @if($appointment->zoom_start_url)
+                        <a href="{{ $appointment->zoom_start_url }}" target="_blank"
+                            class="inline-flex items-center px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold text-sm shadow">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Start Video Call (Host)
+                        </a>
+                        @endif
+
+                        {{-- Copy patient join link --}}
+                        <button type="button"
+                            onclick="navigator.clipboard.writeText('{{ $appointment->zoom_join_url }}').then(()=>{ this.innerText='✓ Copied!'; setTimeout(()=>this.innerText='Copy Patient Link',2000) })"
+                            class="inline-flex items-center px-4 py-2.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 text-sm font-medium">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy Patient Link
+                        </button>
+
+                        <p class="w-full text-xs text-gray-500">Share the Patient Link or Meeting ID + Password with your patient before the call.</p>
+
+                    @else
+
+                        {{-- Patient / others: Join as participant --}}
+                        <a href="{{ $appointment->zoom_join_url }}" target="_blank"
+                            class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm shadow">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Join Video Call
+                        </a>
+                        <p class="w-full text-xs text-gray-500">Click "Join Video Call" at your scheduled time. Zoom must be installed on your device.</p>
+
                     @endif
                 </div>
+
+            </div>
+        </div>
+
+        {{-- No meeting yet but appointment is confirmed — doctor can create --}}
+        @elseif(in_array($appointment->status, ['confirmed', 'completed']) && Auth::user()->hasRole('Doctor') && $appointment->doctor_id === Auth::id())
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                Video Consultation
+            </h3>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-yellow-800">No video meeting has been set up yet.</p>
+                    <p class="text-xs text-yellow-700 mt-0.5">Create a Zoom meeting to start a video call with your patient.</p>
+                </div>
+                <form action="{{ route('appointments.create-zoom', $appointment) }}" method="POST" class="ml-4 shrink-0">
+                    @csrf
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Video Meeting
+                    </button>
+                </form>
             </div>
         </div>
         @endif

@@ -6,8 +6,10 @@ use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\User;
 use App\Services\ZoomService;
+use App\Notifications\AppointmentConfirmedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
 
 class AppointmentController extends Controller
@@ -56,20 +58,49 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Show upcoming confirmed video call appointments
+     */
+    public function videoCallIndex()
+    {
+        $user = Auth::user();
+
+        $query = Appointment::with(['patient', 'doctor'])
+            ->where('status', 'confirmed')
+            ->whereNotNull('zoom_meeting_id')
+            ->where('appointment_date', '>=', today());
+
+        if ($user->hasRole('Doctor')) {
+            $query->where('doctor_id', $user->id);
+        } elseif ($user->hasRole('Patient')) {
+            $patient = Patient::where('user_id', $user->id)->first();
+            $patient
+                ? $query->where('patient_id', $patient->id)
+                : $query->whereRaw('1 = 0');
+        }
+
+        $appointments = $query->orderBy('appointment_date')->orderBy('appointment_time')->get();
+
+        return view('video-calls.index', compact('appointments'));
+    }
+
+    /**
      * Show the form for creating a new appointment (booking)
      */
     public function create()
     {
         $user = Auth::user();
         $doctors = User::role('Doctor')->get();
-        
-        // Get patient record
-        $patient = null;
+
+        $patient  = null;
+        $patients = collect();
+
         if ($user->hasRole('Patient')) {
             $patient = Patient::where('user_id', $user->id)->first();
+        } else {
+            $patients = Patient::orderBy('first_name')->get();
         }
 
-        return view('appointments.create', compact('doctors', 'patient'));
+        return view('appointments.create', compact('doctors', 'patient', 'patients'));
     }
 
     /**
@@ -265,6 +296,10 @@ class AppointmentController extends Controller
             }
         }
 
+        // Refresh to get latest zoom fields then send notifications
+        $appointment->refresh();
+        $this->dispatchAppointmentNotifications($appointment);
+
         return redirect()->route('appointments.show', $appointment)
             ->with('success', 'Payment marked as received. Appointment is now confirmed and visible as success to doctor and patient.');
     }
@@ -311,6 +346,75 @@ class AppointmentController extends Controller
         return response()->json([
             'available_slots' => array_values($availableSlots),
         ]);
+    }
+
+    /**
+     * Manually create Zoom meeting for a confirmed appointment (doctor only)
+     */
+    public function createZoom(Appointment $appointment)
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('Doctor') || $appointment->doctor_id !== $user->id) {
+            abort(403);
+        }
+
+        if (!in_array($appointment->status, ['confirmed', 'completed'])) {
+            return back()->with('error', 'Video meeting can only be created for confirmed appointments.');
+        }
+
+        if ($appointment->zoom_meeting_id) {
+            return back()->with('info', 'A video meeting already exists for this appointment.');
+        }
+
+        $this->createZoomMeeting($appointment);
+        $appointment->refresh();
+
+        if ($appointment->zoom_meeting_id) {
+            $this->dispatchAppointmentNotifications($appointment);
+            return redirect()->route('appointments.show', $appointment)
+                ->with('success', 'Video meeting created successfully.');
+        }
+
+        return back()->with('error', 'Failed to create video meeting. Please check Zoom credentials in settings.');
+    }
+
+    /**
+     * Send email + in-app notifications to doctor, patient user, and admins
+     */
+    private function dispatchAppointmentNotifications(Appointment $appointment): void
+    {
+        try {
+            $appointment->loadMissing(['patient.user', 'doctor']);
+
+            // Notify doctor (database + email)
+            $appointment->doctor->notify(
+                new AppointmentConfirmedNotification($appointment, 'doctor')
+            );
+
+            // Notify patient's User account (database + email) if they have one
+            if ($appointment->patient->user) {
+                $appointment->patient->user->notify(
+                    new AppointmentConfirmedNotification($appointment, 'patient')
+                );
+            } elseif ($appointment->patient->email) {
+                // Patient has no User account — send email-only via on-demand notification
+                Notification::route('mail', [
+                    $appointment->patient->email => $appointment->patient->full_name,
+                ])->notify(new AppointmentConfirmedNotification($appointment, 'patient'));
+            }
+
+            // Notify all admins (database + email)
+            $admins = User::role(['Super Admin', 'Administrator'])->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AppointmentConfirmedNotification($appointment, 'admin'));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to dispatch appointment notifications', [
+                'appointment_id' => $appointment->id,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

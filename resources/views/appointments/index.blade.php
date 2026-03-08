@@ -9,9 +9,9 @@
             <h2 class="text-2xl font-bold text-gray-900">My Appointments</h2>
             <p class="text-gray-600 mt-1">Manage your appointments</p>
         </div>
-        @if(Auth::user()->hasRole('Patient'))
+        @if(Auth::user()->hasRole('Patient') || Auth::user()->hasRole('Doctor') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Administrator') || Auth::user()->hasRole('Receptionist'))
         <a href="{{ route('appointments.create') }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-            Book New Appointment
+            Book Appointment
         </a>
         @endif
     </div>
@@ -114,10 +114,19 @@
                                 <a href="{{ route('appointments.show', $appointment) }}" class="text-green-600 hover:text-green-900 mr-3">
                                     View
                                 </a>
+                                <a href="{{ route('appointments.invoice', $appointment) }}" class="text-gray-700 hover:text-gray-900 mr-3">
+                                    Invoice
+                                </a>
                                 @if($appointment->zoom_join_url && in_array($appointment->status, ['confirmed']))
-                                    <a href="{{ $appointment->zoom_join_url }}" target="_blank" class="text-blue-600 hover:text-blue-900 mr-3">
-                                        Join Zoom
-                                    </a>
+                                    @if(Auth::user()->hasRole('Doctor') && $appointment->doctor_id === Auth::id())
+                                        <a href="{{ $appointment->zoom_start_url ?? $appointment->zoom_join_url }}" target="_blank" class="text-green-600 hover:text-green-900 mr-3 font-medium">
+                                            ▶ Start Call
+                                        </a>
+                                    @else
+                                        <a href="{{ $appointment->zoom_join_url }}" target="_blank" class="text-blue-600 hover:text-blue-900 mr-3 font-medium">
+                                            ▶ Join Call
+                                        </a>
+                                    @endif
                                 @endif
                                 @if(Auth::user()->hasRole('Doctor') && in_array($appointment->status, ['pending', 'confirmed']))
                                     <a href="{{ route('appointments.edit', $appointment) }}" class="text-blue-600 hover:text-blue-900">

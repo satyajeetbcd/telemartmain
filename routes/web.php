@@ -17,6 +17,8 @@ use App\Http\Controllers\AdminDoctorAvailabilityController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\NotificationController;
 
 // Public routes for invitation acceptance
 Route::get('/invitations/accept/{token}', [InvitationController::class, 'showAcceptForm'])->name('invitations.accept');
@@ -32,6 +34,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/', fn() => redirect()->route('dashboard'));
+
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     
     // API route for getting cities by state
     Route::get('/api/cities', [UserController::class, 'getCitiesByState'])->name('api.cities');
@@ -61,10 +69,15 @@ Route::middleware('auth')->group(function () {
         Route::put('/profile', [PatientController::class, 'updateProfile'])->name('profile.update');
     });
 
+    // Video Calls
+    Route::get('/video-calls', [AppointmentController::class, 'videoCallIndex'])->name('video-calls.index');
+
     // Appointment routes
     Route::resource('appointments', AppointmentController::class);
     Route::get('/appointments/slots/available', [AppointmentController::class, 'getAvailableSlots'])->name('appointments.available-slots');
     Route::post('/appointments/{appointment}/mark-paid', [AppointmentController::class, 'markPaymentReceived'])->name('appointments.mark-paid');
+    Route::post('/appointments/{appointment}/create-zoom', [AppointmentController::class, 'createZoom'])->name('appointments.create-zoom');
+    Route::get('/appointments/{appointment}/invoice', [InvoiceController::class, 'show'])->name('appointments.invoice');
 
     // Medical Records routes
     Route::resource('medical-records', MedicalRecordController::class);

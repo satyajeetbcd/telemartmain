@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Tele Health Mart') - Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --primary-red: #DC2626;
-            --primary-green: #10B981;
-            --dark-green: #059669;
-            --light-green: #D1FAE5;
-            --light-red: #FEE2E2;
-        }
-    </style>
+    @if(file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
+    @endif
+    @stack('styles')
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen overflow-hidden">
@@ -61,6 +57,37 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                         </svg>
                         Appointments
+                    </a>
+                    @endif
+
+                    @if(Auth::user()->hasRole('Doctor') || Auth::user()->hasRole('Patient'))
+                    <a href="{{ route('video-calls.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('video-calls.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-600' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Video Calls
+                        @php
+                            $sidebarZoomCount = 0;
+                            if (Auth::user()->hasRole('Doctor')) {
+                                $sidebarZoomCount = \App\Models\Appointment::where('doctor_id', Auth::id())
+                                    ->whereDate('appointment_date', today())
+                                    ->where('status', 'confirmed')
+                                    ->whereNotNull('zoom_meeting_id')
+                                    ->count();
+                            } elseif (Auth::user()->hasRole('Patient')) {
+                                $sidebarPatient = \App\Models\Patient::where('user_id', Auth::id())->first();
+                                if ($sidebarPatient) {
+                                    $sidebarZoomCount = \App\Models\Appointment::where('patient_id', $sidebarPatient->id)
+                                        ->whereDate('appointment_date', today())
+                                        ->where('status', 'confirmed')
+                                        ->whereNotNull('zoom_meeting_id')
+                                        ->count();
+                                }
+                            }
+                        @endphp
+                        @if($sidebarZoomCount > 0)
+                            <span class="ml-auto px-2 py-0.5 text-xs font-bold bg-green-600 text-white rounded-full">{{ $sidebarZoomCount }}</span>
+                        @endif
                     </a>
                     @endif
 
@@ -144,6 +171,72 @@
                 </div>
             </nav>
 
+            {{-- Today's Zoom Calls Widget --}}
+            @if(Auth::user()->hasRole('Doctor') || Auth::user()->hasRole('Patient'))
+            @php
+                $todayZoomCalls = collect();
+                if (Auth::user()->hasRole('Doctor')) {
+                    $todayZoomCalls = \App\Models\Appointment::with('patient')
+                        ->where('doctor_id', Auth::id())
+                        ->whereDate('appointment_date', today())
+                        ->where('status', 'confirmed')
+                        ->whereNotNull('zoom_start_url')
+                        ->orderBy('appointment_time')
+                        ->get();
+                } elseif (Auth::user()->hasRole('Patient')) {
+                    $todayPatient = \App\Models\Patient::where('user_id', Auth::id())->first();
+                    if ($todayPatient) {
+                        $todayZoomCalls = \App\Models\Appointment::with('doctor')
+                            ->where('patient_id', $todayPatient->id)
+                            ->whereDate('appointment_date', today())
+                            ->where('status', 'confirmed')
+                            ->whereNotNull('zoom_join_url')
+                            ->orderBy('appointment_time')
+                            ->get();
+                    }
+                }
+            @endphp
+            @if($todayZoomCalls->count() > 0)
+            <div class="mx-3 mb-3 bg-green-50 rounded-lg border border-green-200 p-3">
+                <p class="text-xs font-bold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Today's Calls
+                </p>
+                @foreach($todayZoomCalls as $todayCall)
+                <div class="mb-2 last:mb-0 bg-white rounded-md p-2 border border-green-100">
+                    <p class="text-xs font-semibold text-gray-800 truncate">
+                        @if(Auth::user()->hasRole('Doctor'))
+                            {{ $todayCall->patient->full_name }}
+                        @else
+                            Dr. {{ $todayCall->doctor->name }}
+                        @endif
+                    </p>
+                    <p class="text-xs text-gray-500 mb-1.5">{{ date('h:i A', strtotime($todayCall->appointment_time)) }}</p>
+                    @if(Auth::user()->hasRole('Doctor'))
+                    <a href="{{ $todayCall->zoom_start_url }}" target="_blank"
+                        class="flex items-center justify-center gap-1 px-2 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Start Call
+                    </a>
+                    @else
+                    <a href="{{ $todayCall->zoom_join_url }}" target="_blank"
+                        class="flex items-center justify-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Join Call
+                    </a>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @endif
+            @endif
+
             <!-- User Section -->
             <div class="p-4 border-t border-gray-200">
                 <div class="flex items-center justify-between mb-3">
@@ -173,8 +266,25 @@
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Bar -->
             <header class="bg-white shadow-sm border-b border-gray-200">
-                <div class="px-6 py-4">
+                <div class="px-6 py-4 flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-gray-900">@yield('title', 'Dashboard')</h1>
+                    {{-- Notification Bell --}}
+                    @php $unreadCount = Auth::user()->unreadNotifications->count(); @endphp
+                    <div class="relative">
+                        <a href="{{ route('notifications.index') }}"
+                            class="relative inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                </path>
+                            </svg>
+                            @if($unreadCount > 0)
+                                <span class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                                </span>
+                            @endif
+                        </a>
+                    </div>
                 </div>
             </header>
 
