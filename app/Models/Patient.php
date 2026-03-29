@@ -15,6 +15,7 @@ class Patient extends BaseModel
         'first_name',
         'last_name',
         'email',
+        'password',
         'phone',
         'alternate_phone',
         'date_of_birth',
@@ -35,12 +36,19 @@ class Patient extends BaseModel
         'insurance_policy_number',
         'status',
         'notes',
+        'api_token',
+    ];
+
+    protected $hidden = [
+        'password',
+        'api_token',
     ];
 
     protected function casts(): array
     {
         return [
             'date_of_birth' => 'date',
+            'password' => 'hashed',
         ];
     }
 
@@ -65,6 +73,11 @@ class Patient extends BaseModel
     public function prescriptions()
     {
         return $this->hasMany(Prescription::class);
+    }
+
+    public function consultations()
+    {
+        return $this->hasMany(Consultation::class);
     }
 
     /**

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@php use Illuminate\Support\Facades\Storage; @endphp
 
 @section('title', 'Patient Details')
 
@@ -245,6 +246,226 @@
         </div>
         @else
         <p class="text-sm text-gray-500 py-4">No appointments yet. <a href="{{ route('patients.edit', $patient) }}" class="text-green-600 hover:text-green-700">Edit patient</a> to assign one.</p>
+        @endif
+    </div>
+
+    <!-- Consultations -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                Consultations ({{ $patient->consultations->count() }})
+            </h3>
+            <a href="{{ route('consultations.create', ['patient_id' => $patient->id]) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Consultation
+            </a>
+        </div>
+
+        @if($patient->consultations->count() > 0)
+            <div class="space-y-4">
+                @foreach($patient->consultations as $consultation)
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <!-- Consultation Header -->
+                    <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <a href="{{ route('consultations.show', $consultation) }}" class="text-sm font-semibold text-green-600 hover:text-green-700">{{ $consultation->consultation_number }}</a>
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full
+                                {{ $consultation->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
+                                {{ $consultation->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                {{ $consultation->status === 'in_review' ? 'bg-blue-100 text-blue-800' : '' }}
+                                {{ $consultation->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
+                                {{ ucfirst(str_replace('_', ' ', $consultation->status)) }}
+                            </span>
+                            @if($consultation->is_followup)
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Follow-up</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">{{ $consultation->created_at->format('M d, Y h:i A') }}</span>
+                            <a href="{{ route('consultations.show', $consultation) }}" class="text-xs text-green-600 hover:text-green-700 font-medium">View</a>
+                            <a href="{{ route('consultations.edit', $consultation) }}" class="text-xs text-blue-600 hover:text-blue-700 font-medium">Edit</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-4">
+                        <!-- Query -->
+                        @if($consultation->query)
+                        <div>
+                            <h5 class="text-xs font-semibold text-gray-500 uppercase mb-1">Patient Query</h5>
+                            <p class="text-sm text-gray-900 bg-blue-50 p-3 rounded-lg">{{ $consultation->query }}</p>
+                        </div>
+                        @endif
+
+                        <!-- Chief Complaints -->
+                        @if($consultation->chief_complaints && count($consultation->chief_complaints) > 0)
+                        <div>
+                            <h5 class="text-xs font-semibold text-gray-500 uppercase mb-2">Chief Complaints</h5>
+                            <div class="space-y-3">
+                                @foreach($consultation->chief_complaints as $complaint)
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-green-700 mb-1">{{ $complaint['name'] ?? 'Unknown' }}</p>
+                                    @if(!empty($complaint['sub_answers']))
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                            @foreach($complaint['sub_answers'] as $key => $answer)
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-500 capitalize">{{ str_replace('_', ' ', $key) }}:</span>
+                                                    <span class="text-gray-900 ml-1">
+                                                        @if(is_array($answer))
+                                                            {{ implode(', ', $answer) }}
+                                                        @else
+                                                            {{ $answer }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Two-column info grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Patient History -->
+                            @if($consultation->patient_history && count($consultation->patient_history) > 0)
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-500 uppercase mb-1">Patient History</h5>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($consultation->patient_history as $item)
+                                        <span class="px-2 py-0.5 bg-orange-50 text-orange-700 text-xs rounded-full">{{ $item }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Family History -->
+                            @if($consultation->family_history && count($consultation->family_history) > 0)
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-500 uppercase mb-1">Family History</h5>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($consultation->family_history as $item)
+                                        <span class="px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded-full">{{ $item }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Personal History -->
+                            @if($consultation->personal_history && is_array($consultation->personal_history))
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-500 uppercase mb-1">Personal History</h5>
+                                <div class="flex flex-wrap gap-2 text-xs">
+                                    @foreach($consultation->personal_history as $key => $value)
+                                        @if($value !== null)
+                                        <span class="px-2 py-0.5 rounded-full {{ $value ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">
+                                            {{ ucfirst($key) }}: {{ $value ? 'Yes' : 'No' }}
+                                        </span>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Allergies -->
+                            @if($consultation->allergies && count($consultation->allergies) > 0)
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-500 uppercase mb-1">Allergies</h5>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($consultation->allergies as $item)
+                                        <span class="px-2 py-0.5 bg-yellow-50 text-yellow-700 text-xs rounded-full">{{ $item }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+
+                        <!-- Medications -->
+                        @if($consultation->medications && count($consultation->medications) > 0)
+                        @php
+                            $hasMedications = collect($consultation->medications)->filter(fn($m) => !empty($m['name'] ?? null))->count() > 0;
+                        @endphp
+                        @if($hasMedications)
+                        <div>
+                            <h5 class="text-xs font-semibold text-gray-500 uppercase mb-2">Active Medications</h5>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-xs divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-3 py-1.5 text-left font-medium text-gray-500">Medicine</th>
+                                            <th class="px-3 py-1.5 text-left font-medium text-gray-500">Dose</th>
+                                            <th class="px-3 py-1.5 text-left font-medium text-gray-500">Frequency</th>
+                                            <th class="px-3 py-1.5 text-left font-medium text-gray-500">Duration</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach($consultation->medications as $med)
+                                            @if(!empty($med['name'] ?? null))
+                                            <tr>
+                                                <td class="px-3 py-1.5 text-gray-900">{{ $med['name'] }}</td>
+                                                <td class="px-3 py-1.5 text-gray-600">{{ $med['dose'] ?? '-' }}</td>
+                                                <td class="px-3 py-1.5 text-gray-600">{{ $med['frequency'] ?? '-' }}</td>
+                                                <td class="px-3 py-1.5 text-gray-600">{{ ($med['duration_value'] ?? '') . ' ' . ($med['duration_type'] ?? '') }}</td>
+                                            </tr>
+                                            @endif
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        @endif
+                        @endif
+
+                        <!-- Location & Doctor Info -->
+                        <div class="flex flex-wrap gap-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                            @if($consultation->doctor)
+                                <span><strong>Doctor:</strong> Dr. {{ $consultation->doctor->name }}</span>
+                            @endif
+                            @if($consultation->location_preference)
+                                <span><strong>Location:</strong> {{ ucfirst(str_replace('_', ' ', $consultation->location_preference)) }}</span>
+                            @endif
+                            @if($consultation->state)
+                                <span><strong>State:</strong> {{ $consultation->state }}</span>
+                            @endif
+                            @if($consultation->opd)
+                                <span><strong>OPD:</strong> {{ $consultation->opd }}</span>
+                            @endif
+                        </div>
+
+                        <!-- Health Record Attachments -->
+                        @if($consultation->health_records && count($consultation->health_records) > 0)
+                        <div class="pt-3 border-t border-gray-100">
+                            <h5 class="text-xs font-semibold text-gray-500 uppercase mb-2">Uploaded Health Records</h5>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($consultation->health_records as $file)
+                                <a href="{{ Storage::url($file['path']) }}" target="_blank"
+                                   class="inline-flex items-center px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-700 transition">
+                                    <svg class="w-3.5 h-3.5 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                    {{ $file['name'] ?? 'File' }}
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">No consultations submitted yet.</p>
+            </div>
         @endif
     </div>
 

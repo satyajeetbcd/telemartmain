@@ -117,6 +117,8 @@ class PatientManagementController extends Controller
             $q->with(['doctor', 'items'])->latest('prescription_date')->latest('id');
         }, 'appointments' => function ($q) {
             $q->with('doctor')->latest('appointment_date')->latest('appointment_time')->latest('id');
+        }, 'consultations' => function ($q) {
+            $q->with('doctor')->latest('created_at');
         }]);
         return view('patients.show', compact('patient'));
     }

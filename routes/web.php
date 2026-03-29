@@ -19,6 +19,7 @@ use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ConsultationController;
 
 // Public routes for invitation acceptance
 Route::get('/invitations/accept/{token}', [InvitationController::class, 'showAcceptForm'])->name('invitations.accept');
@@ -80,6 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/appointments/{appointment}/invoice', [InvoiceController::class, 'show'])->name('appointments.invoice');
 
     // Medical Records routes
+    Route::resource('consultations', ConsultationController::class);
     Route::resource('medical-records', MedicalRecordController::class);
     Route::get('/medical-records/{medical_record}/download/{attachment}', [MedicalRecordController::class, 'download'])->name('medical-records.download');
     Route::get('/api/medical-records/appointments', [MedicalRecordController::class, 'getAppointments'])->name('medical-records.appointments');
