@@ -6,7 +6,9 @@ use App\Models\Prescription;
 use App\Models\PrescriptionItem;
 use App\Models\Patient;
 use App\Models\Appointment;
+use App\Models\Consultation;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -280,6 +282,27 @@ class PrescriptionController extends Controller
         });
 
         return response()->json($appointments);
+    }
+
+    public function downloadPdf(Prescription $prescription)
+    {
+        $user = Auth::user();
+        $this->authorizeAccess($user, $prescription);
+
+        $prescription->load(['patient', 'doctor', 'appointment', 'items']);
+
+        // Try to get consultation data linked to the same appointment
+        $consultation = null;
+        if ($prescription->appointment_id) {
+            $consultation = Consultation::where('appointment_id', $prescription->appointment_id)->first();
+        }
+
+        $pdf = Pdf::loadView('prescriptions.pdf', compact('prescription', 'consultation'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'Prescription-' . $prescription->prescription_number . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     private function authorizeAccess($user, Prescription $prescription): void

@@ -638,6 +638,7 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('prescriptions.show', $prescription) }}" class="text-green-600 hover:text-green-900 mr-2">View</a>
+                            <a href="{{ route('prescriptions.pdf', $prescription) }}" class="text-red-600 hover:text-red-900 mr-2" title="Download PDF">PDF</a>
                             @if(Auth::user()->hasRole('Doctor') && $prescription->doctor_id === Auth::id())
                                 <a href="{{ route('prescriptions.edit', $prescription) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
                             @endif

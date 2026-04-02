@@ -88,6 +88,7 @@ Route::middleware('auth')->group(function () {
 
     // Prescription routes
     Route::resource('prescriptions', PrescriptionController::class);
+    Route::get('/prescriptions/{prescription}/pdf', [PrescriptionController::class, 'downloadPdf'])->name('prescriptions.pdf');
     Route::get('/api/prescriptions/appointments', [PrescriptionController::class, 'getAppointments'])->name('prescriptions.appointments');
 
     // Review routes

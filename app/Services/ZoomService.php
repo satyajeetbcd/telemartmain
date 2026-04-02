@@ -32,10 +32,12 @@ class ZoomService
 
         try {
             // Server-to-Server OAuth endpoint
-            $response = Http::asForm()->post('https://zoom.us/oauth/token', [
-                'grant_type' => 'account_credentials',
-                'account_id' => $this->accountId,
-            ])->withBasicAuth($this->clientId, $this->clientSecret);
+            $response = Http::asForm()
+                ->withBasicAuth($this->clientId, $this->clientSecret)
+                ->post('https://zoom.us/oauth/token', [
+                    'grant_type' => 'account_credentials',
+                    'account_id' => $this->accountId,
+                ]);
 
             if ($response->successful()) {
                 $data = $response->json();

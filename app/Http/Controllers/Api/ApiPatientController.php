@@ -10,6 +10,7 @@ use App\Models\MedicalRecord;
 use App\Models\Patient;
 use App\Models\Prescription;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -565,5 +566,42 @@ class ApiPatientController extends Controller
             });
 
         return response()->json(['prescriptions' => $prescriptions]);
+    }
+
+    public function invoicePdf(Request $request, $appointmentId)
+    {
+        $patient = $this->getPatient($request);
+
+        $appointment = Appointment::with(['patient', 'doctor'])
+            ->where('patient_id', $patient->id)
+            ->findOrFail($appointmentId);
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('appointment'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'Invoice-INV-' . $appointment->appointment_number . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function prescriptionPdf(Request $request, $id)
+    {
+        $patient = $this->getPatient($request);
+
+        $prescription = Prescription::with(['patient', 'doctor', 'appointment', 'items'])
+            ->where('patient_id', $patient->id)
+            ->findOrFail($id);
+
+        $consultation = null;
+        if ($prescription->appointment_id) {
+            $consultation = Consultation::where('appointment_id', $prescription->appointment_id)->first();
+        }
+
+        $pdf = Pdf::loadView('prescriptions.pdf', compact('prescription', 'consultation'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'Prescription-' . $prescription->prescription_number . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

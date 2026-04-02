@@ -334,7 +334,8 @@
                                 <td class="px-3 py-2 font-medium text-gray-900">{{ $rx->prescription_number }}</td>
                                 <td class="px-3 py-2 text-gray-600">{{ $rx->prescription_date->format('M d, Y') }}</td>
                                 <td class="px-3 py-2">
-                                    <a href="{{ route('prescriptions.show', $rx) }}" class="text-green-600 hover:text-green-800">View</a>
+                                    <a href="{{ route('prescriptions.show', $rx) }}" class="text-green-600 hover:text-green-800 mr-2">View</a>
+                                    <a href="{{ route('prescriptions.pdf', $rx) }}" class="text-red-600 hover:text-red-800" title="Download PDF">PDF</a>
                                 </td>
                             </tr>
                             @endforeach

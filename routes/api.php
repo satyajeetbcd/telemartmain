@@ -32,6 +32,8 @@ Route::middleware('patient.token')->group(function () {
     Route::get('/patient/consultations', [ApiPatientController::class, 'consultations']);
     Route::get('/patient/consultations/{id}', [ApiPatientController::class, 'showConsultation']);
     Route::put('/patient/consultations/{id}', [ApiPatientController::class, 'updateConsultation']);
+    Route::get('/patient/appointments/{id}/invoice-pdf', [ApiPatientController::class, 'invoicePdf']);
     Route::get('/patient/prescriptions', [ApiPatientController::class, 'prescriptions']);
+    Route::get('/patient/prescriptions/{id}/pdf', [ApiPatientController::class, 'prescriptionPdf']);
     Route::get('/patient/dashboard-stats', [ApiPatientController::class, 'dashboardStats']);
 });
