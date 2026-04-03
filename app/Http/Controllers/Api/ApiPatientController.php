@@ -145,6 +145,8 @@ class ApiPatientController extends Controller
                     'consultation_fee' => $apt->consultation_fee ? '₹' . number_format($apt->consultation_fee, 2) : 'N/A',
                     'reason' => $apt->reason,
                     'zoom_join_url' => $apt->zoom_join_url,
+                    'zoom_meeting_password' => $apt->zoom_meeting_password,
+                    'zoom_meeting_status' => $apt->zoom_meeting_status,
                 ];
             });
 
