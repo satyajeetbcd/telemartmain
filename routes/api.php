@@ -5,6 +5,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiAuthController;
 use App\Http\Controllers\Api\ApiPatientController;
 use App\Http\Controllers\Api\ApiStatsController;
+use App\Http\Controllers\ZoomWebhookController;
+
+// Zoom webhook (verified by HMAC signature, no auth middleware)
+Route::post('/zoom/webhook', [ZoomWebhookController::class, 'handle']);
 
 // Authenticated user (for backend/admin usage)
 Route::get('/user', function (Request $request) {

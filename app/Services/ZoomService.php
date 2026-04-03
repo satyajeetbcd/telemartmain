@@ -186,6 +186,44 @@ class ZoomService
     }
 
     /**
+     * Verify Zoom webhook request signature
+     */
+    public static function verifyWebhookSignature(\Illuminate\Http\Request $request): bool
+    {
+        $secretToken = config('services.zoom.webhook_secret_token');
+        if (!$secretToken) {
+            Log::error('Zoom webhook secret token not configured');
+            return false;
+        }
+
+        $timestamp = $request->header('x-zm-request-timestamp');
+        $signature = $request->header('x-zm-signature');
+
+        if (!$timestamp || !$signature) {
+            return false;
+        }
+
+        $message = "v0:{$timestamp}:{$request->getContent()}";
+        $hash = 'v0=' . hash_hmac('sha256', $message, $secretToken);
+
+        return hash_equals($hash, $signature);
+    }
+
+    /**
+     * Generate URL validation response for Zoom webhook challenge
+     */
+    public static function generateValidationResponse(string $plainToken): array
+    {
+        $secretToken = config('services.zoom.webhook_secret_token');
+        $encryptedToken = hash_hmac('sha256', $plainToken, $secretToken);
+
+        return [
+            'plainToken' => $plainToken,
+            'encryptedToken' => $encryptedToken,
+        ];
+    }
+
+    /**
      * Format datetime for Zoom API
      */
     private function formatDateTime($datetime): string

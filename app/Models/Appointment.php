@@ -29,6 +29,12 @@ class Appointment extends BaseModel
         'zoom_start_url',
         'zoom_meeting_password',
         'zoom_meeting_created_at',
+        'zoom_meeting_status',
+        'zoom_meeting_started_at',
+        'zoom_meeting_ended_at',
+        'zoom_participant_doctor_joined_at',
+        'zoom_participant_patient_joined_at',
+        'zoom_meeting_duration_minutes',
     ];
 
     protected function casts(): array
@@ -40,6 +46,11 @@ class Appointment extends BaseModel
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'zoom_meeting_created_at' => 'datetime',
+            'zoom_meeting_started_at' => 'datetime',
+            'zoom_meeting_ended_at' => 'datetime',
+            'zoom_participant_doctor_joined_at' => 'datetime',
+            'zoom_participant_patient_joined_at' => 'datetime',
+            'zoom_meeting_duration_minutes' => 'integer',
         ];
     }
 
