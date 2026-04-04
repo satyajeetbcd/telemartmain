@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiAuthController;
 use App\Http\Controllers\Api\ApiPatientController;
 use App\Http\Controllers\Api\ApiStatsController;
+use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\ZoomWebhookController;
 
 // Zoom webhook (verified by HMAC signature, no auth middleware)
@@ -19,6 +20,17 @@ Route::get('/user', function (Request $request) {
 Route::post('/patient/login', [ApiAuthController::class, 'login']);
 Route::post('/patient/register', [ApiAuthController::class, 'register']);
 Route::get('/stats', [ApiStatsController::class, 'index']);
+
+// SMS & OTP endpoints (public - for login/register flows)
+Route::post('/sms/send-otp', [SmsController::class, 'sendOtp']);
+Route::post('/sms/verify-otp', [SmsController::class, 'verifyOtp']);
+Route::post('/sms/resend-otp', [SmsController::class, 'resendOtp']);
+
+// Admin SMS endpoints (requires Sanctum auth)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/sms/send', [SmsController::class, 'sendSms']);
+    Route::post('/sms/send-flow', [SmsController::class, 'sendFlowSms']);
+});
 
 // Protected patient endpoints (uses patient token, NOT sanctum)
 Route::middleware('patient.token')->group(function () {

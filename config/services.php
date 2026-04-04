@@ -35,6 +35,13 @@ return [
         ],
     ],
 
+    'msg91' => [
+        'auth_key' => env('MSG_SMS_KEY'),
+        'sender_id' => env('MSG91_SENDER_ID', 'TLMRT'),
+        'otp_template_id' => env('MSG91_OTP_TEMPLATE_ID'),
+        'route' => env('MSG91_ROUTE', '4'), // 4 = transactional
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID'),
         'client_id' => env('ZOOM_CLIENT_ID'),
