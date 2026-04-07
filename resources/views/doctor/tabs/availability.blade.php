@@ -92,6 +92,83 @@
         @endif
     </div>
 
+    <!-- Leave Management -->
+    <div class="bg-white border rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-900 mb-4">Leave Management</h4>
+
+        {{-- Add Leave Form --}}
+        <form action="{{ route('doctor.leaves.store') }}" method="POST" class="mb-6">
+            @csrf
+            <div class="flex items-end gap-4 flex-wrap">
+                <div>
+                    <label for="leave_date" class="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
+                    <input type="date" name="leave_date" id="leave_date" required
+                           min="{{ date('Y-m-d') }}" value="{{ old('leave_date') }}"
+                           class="border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    @error('leave_date')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="flex-1">
+                    <label for="leave_reason" class="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+                    <input type="text" name="reason" id="leave_reason" value="{{ old('reason') }}" placeholder="e.g. Personal, Conference, Holiday..."
+                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                </div>
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium whitespace-nowrap">
+                    Add Leave
+                </button>
+            </div>
+        </form>
+
+        {{-- Upcoming Leaves --}}
+        @php
+            $leaves = \App\Models\DoctorLeave::where('doctor_id', $doctor->id)
+                ->where('leave_date', '>=', now()->toDateString())
+                ->orderBy('leave_date')
+                ->get();
+        @endphp
+
+        @if($leaves->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($leaves as $leave)
+                            <tr>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $leave->leave_date->format('M d, Y') }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $leave->leave_date->format('l') }}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-500">
+                                    {{ $leave->reason ?? '-' }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                    <form action="{{ route('doctor.leaves.destroy', $leave) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Cancel this leave?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900">Cancel Leave</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-sm text-gray-500 text-center py-4">No upcoming leaves scheduled.</p>
+        @endif
+    </div>
+
     <!-- Specific Date Overrides -->
     <div class="bg-white border rounded-lg p-6">
         <h4 class="text-md font-semibold text-gray-900 mb-4">Specific Date Availability</h4>

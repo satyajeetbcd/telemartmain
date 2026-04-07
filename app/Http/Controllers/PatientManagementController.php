@@ -6,6 +6,7 @@ use App\Models\Patient;
 use App\Models\User;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class PatientManagementController extends Controller
@@ -15,7 +16,15 @@ class PatientManagementController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
         $query = Patient::with('user')->latest();
+
+        // Doctors only see patients who booked with them (unless they have full_list permission)
+        if ($user->hasRole('Doctor') && !$user->can('full_list patients')) {
+            $query->whereHas('appointments', function($q) use ($user) {
+                $q->where('doctor_id', $user->id);
+            });
+        }
 
         // Search functionality
         if ($request->has('search') && $request->search) {

@@ -44,14 +44,52 @@
                                     ₹{{ number_format($appointment->consultation_fee ?? 0, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ route('appointments.show', $appointment) }}" class="text-green-600 hover:text-green-900">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        {{-- Approve (pending only) --}}
+                                        @if($appointment->status === 'pending')
+                                            <form action="{{ route('appointments.update', $appointment) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="status" value="confirmed">
+                                                <input type="hidden" name="_redirect" value="{{ route('doctor.profile', ['tab' => 'appointments']) }}">
+                                                <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 transition-colors">
+                                                    Approve
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        {{-- Decline (pending only) --}}
+                                        @if($appointment->status === 'pending')
+                                            <form action="{{ route('appointments.update', $appointment) }}" method="POST" class="inline"
+                                                  onsubmit="let r = prompt('Reason for declining this appointment?'); if(!r){return false;} this.querySelector('[name=cancellation_reason]').value=r;">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="status" value="cancelled">
+                                                <input type="hidden" name="cancellation_reason" value="">
+                                                <input type="hidden" name="_redirect" value="{{ route('doctor.profile', ['tab' => 'appointments']) }}">
+                                                <button type="submit" class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors">
+                                                    Decline
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        {{-- Edit Time (pending/confirmed only) --}}
+                                        @if(in_array($appointment->status, ['pending', 'confirmed']))
+                                            <a href="{{ route('appointments.edit', $appointment) }}" class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors">
+                                                Edit Time
+                                            </a>
+                                        @endif
+
+                                        {{-- View --}}
+                                        <a href="{{ route('appointments.show', $appointment) }}" class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                             View
                                         </a>
+
+                                        {{-- Start Call (confirmed with Zoom) --}}
                                         @if($appointment->zoom_start_url && $appointment->status === 'confirmed')
                                             <a href="{{ $appointment->zoom_start_url }}" target="_blank"
                                                 title="Start video call"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-600 text-white rounded-full hover:bg-green-700 text-xs font-medium transition-colors">
+                                                class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 transition-colors">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                                 </svg>

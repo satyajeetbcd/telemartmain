@@ -164,6 +164,70 @@
         </div>
         @endif
 
+        {{-- Reassign Doctor Section (for cancelled/pending appointments - visible to patient owner & admins) --}}
+        @php
+            $canReassign = false;
+            $isAdmin = Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Administrator');
+            if ($isAdmin && in_array($appointment->status, ['cancelled', 'pending'])) {
+                $canReassign = true;
+            } elseif (Auth::user()->hasRole('Patient') && in_array($appointment->status, ['cancelled', 'pending'])) {
+                $patientRecord = \App\Models\Patient::where('user_id', Auth::id())->first();
+                if ($patientRecord && $appointment->patient_id === $patientRecord->id) {
+                    $canReassign = true;
+                }
+            }
+        @endphp
+
+        @if($canReassign)
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+                Change Doctor
+            </h3>
+            @if($appointment->status === 'cancelled')
+                <p class="text-sm text-gray-600 mb-3">This appointment was declined/cancelled. You can reassign it to a different doctor.</p>
+            @else
+                <p class="text-sm text-gray-600 mb-3">Reassign this appointment to a different doctor.</p>
+            @endif
+
+            <form action="{{ route('appointments.reassign-doctor', $appointment) }}" method="POST"
+                  onsubmit="return confirm('Reassign this appointment to the selected doctor? The appointment will be reset to pending status.');">
+                @csrf
+                @method('PUT')
+                <div class="flex items-end gap-4 flex-wrap">
+                    <div class="flex-1 min-w-[250px]">
+                        <label for="doctor_id" class="block text-sm font-medium text-gray-700 mb-1">Select New Doctor</label>
+                        <select name="doctor_id" id="doctor_id" required
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            <option value="">-- Select Doctor --</option>
+                            @php
+                                $doctors = \App\Models\User::role('Doctor')
+                                    ->where('id', '!=', $appointment->doctor_id)
+                                    ->where('status', 'active')
+                                    ->orderBy('name')
+                                    ->get();
+                            @endphp
+                            @foreach($doctors as $doc)
+                                <option value="{{ $doc->id }}">
+                                    Dr. {{ $doc->name }} — {{ $doc->specialization ?? 'General' }}
+                                    (₹{{ number_format($doc->consultation_fee ?? 0, 2) }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('doctor_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm font-medium whitespace-nowrap">
+                        Reassign Doctor
+                    </button>
+                </div>
+            </form>
+        </div>
+        @endif
+
         {{-- ── Video Consultation ── --}}
         @if($appointment->zoom_join_url)
         <div class="mt-6 pt-6 border-t border-gray-200">

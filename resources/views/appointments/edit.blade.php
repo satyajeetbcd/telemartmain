@@ -15,6 +15,30 @@
             @method('PUT')
 
             <div class="space-y-6">
+                @if(in_array($appointment->status, ['pending', 'confirmed']))
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="appointment_date" class="block text-sm font-medium text-gray-700 mb-2">Appointment Date</label>
+                        <input type="date" name="appointment_date" id="appointment_date"
+                               value="{{ old('appointment_date', $appointment->appointment_date->format('Y-m-d')) }}"
+                               min="{{ now()->format('Y-m-d') }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        @error('appointment_date')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label for="appointment_time" class="block text-sm font-medium text-gray-700 mb-2">Appointment Time</label>
+                        <input type="time" name="appointment_time" id="appointment_time"
+                               value="{{ old('appointment_time', \Carbon\Carbon::parse($appointment->appointment_time)->format('H:i')) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        @error('appointment_time')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                @endif
+
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
                     <select name="status" id="status" required

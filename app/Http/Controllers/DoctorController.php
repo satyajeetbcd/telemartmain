@@ -21,7 +21,9 @@ class DoctorController extends Controller
         $doctor = Auth::user();
         $today = now()->toDateString();
         $stats = [
-            'total_patients' => Patient::count(),
+            'total_patients' => Patient::whereHas('appointments', function($q) use ($doctor) {
+                $q->where('doctor_id', $doctor->id);
+            })->count(),
             'today_appointments' => \App\Models\Appointment::where('doctor_id', $doctor->id)
                 ->where('appointment_date', $today)
                 ->whereIn('status', ['pending', 'confirmed'])
@@ -32,8 +34,10 @@ class DoctorController extends Controller
                 ->count(),
         ];
 
-        // Recent patients
-        $recentPatients = Patient::latest()->take(5)->get();
+        // Recent patients (only those who booked with this doctor)
+        $recentPatients = Patient::whereHas('appointments', function($query) use ($doctor) {
+            $query->where('doctor_id', $doctor->id);
+        })->latest()->take(5)->get();
 
         // KYC Status
         $kycController = new \App\Http\Controllers\DoctorKycController();
@@ -58,14 +62,13 @@ class DoctorController extends Controller
             ->get()
             ->groupBy('document_type');
 
-        // Get patients who have appointments with this doctor
-        $patients = \App\Models\Patient::whereHas('appointments', function($query) use ($doctor) {
-            $query->where('doctor_id', $doctor->id)
-                  ->whereIn('status', ['confirmed', 'completed']);
-        })->with(['appointments' => function($query) use ($doctor) {
-            $query->where('doctor_id', $doctor->id)
-                  ->orderBy('appointment_date', 'desc');
-        }])->distinct()->get();
+        // Get all appointments for this doctor (appointment-centric for patients tab)
+        $patientAppointments = \App\Models\Appointment::where('doctor_id', $doctor->id)
+            ->with('patient')
+            ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'confirmed' THEN 2 WHEN 'completed' THEN 3 WHEN 'cancelled' THEN 4 WHEN 'no_show' THEN 5 ELSE 6 END")
+            ->orderBy('appointment_date', 'desc')
+            ->orderBy('appointment_time', 'desc')
+            ->paginate(15, ['*'], 'patients_page');
 
         // Get all appointments for this doctor
         $appointments = \App\Models\Appointment::where('doctor_id', $doctor->id)
@@ -88,7 +91,7 @@ class DoctorController extends Controller
 
         $activeTab = $request->get('tab', 'profile');
 
-        return view('doctor.profile', compact('doctor', 'kycStatus', 'kycDocuments', 'patients', 'appointments', 'reviews', 'averageRating', 'reviewCount', 'ratingDistribution', 'activeTab', 'states', 'cities'));
+        return view('doctor.profile', compact('doctor', 'kycStatus', 'kycDocuments', 'patientAppointments', 'appointments', 'reviews', 'averageRating', 'reviewCount', 'ratingDistribution', 'activeTab', 'states', 'cities'));
     }
 
     public function updateProfile(Request $request)

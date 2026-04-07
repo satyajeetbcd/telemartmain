@@ -88,7 +88,7 @@
             @elseif($activeTab === 'kyc')
                 @include('doctor.tabs.kyc', ['doctor' => $doctor, 'kycStatus' => $kycStatus, 'kycDocuments' => $kycDocuments])
             @elseif($activeTab === 'patients')
-                @include('doctor.tabs.patients', ['doctor' => $doctor, 'patients' => $patients])
+                @include('doctor.tabs.patients', ['doctor' => $doctor, 'patientAppointments' => $patientAppointments])
             @elseif($activeTab === 'appointments')
                 @include('doctor.tabs.appointments', ['doctor' => $doctor, 'appointments' => $appointments])
             @elseif($activeTab === 'availability')

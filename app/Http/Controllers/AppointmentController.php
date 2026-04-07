@@ -235,6 +235,8 @@ class AppointmentController extends Controller
             'notes' => 'nullable|string',
             'prescription' => 'nullable|string',
             'cancellation_reason' => 'nullable|required_if:status,cancelled|string',
+            'appointment_date' => 'nullable|date|after_or_equal:today',
+            'appointment_time' => 'nullable|date_format:H:i',
         ]);
 
         // Update timestamps based on status
@@ -257,6 +259,12 @@ class AppointmentController extends Controller
         }
 
         $appointment->update($validated);
+
+        // Support redirect back to referring page (e.g. doctor profile patients tab)
+        if ($request->has('_redirect')) {
+            return redirect($request->input('_redirect'))
+                ->with('success', 'Appointment updated successfully.');
+        }
 
         return redirect()->route('appointments.show', $appointment)
             ->with('success', 'Appointment updated successfully.');
@@ -377,6 +385,74 @@ class AppointmentController extends Controller
         }
 
         return back()->with('error', 'Failed to create video meeting. Please check Zoom credentials in settings.');
+    }
+
+    /**
+     * Reassign appointment to a different doctor (patient/admin only, for cancelled or on-leave cases)
+     */
+    public function reassignDoctor(Request $request, Appointment $appointment)
+    {
+        $user = Auth::user();
+
+        // Only patient (owner) or admin can reassign
+        $isAdmin = $user->hasRole('Super Admin') || $user->hasRole('Administrator');
+        $isPatientOwner = false;
+        if ($user->hasRole('Patient')) {
+            $patient = Patient::where('user_id', $user->id)->first();
+            $isPatientOwner = $patient && $appointment->patient_id === $patient->id;
+        }
+
+        if (!$isAdmin && !$isPatientOwner) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Only allow reassignment for cancelled appointments or pending ones
+        if (!in_array($appointment->status, ['cancelled', 'pending'])) {
+            return back()->with('error', 'Only cancelled or pending appointments can be reassigned.');
+        }
+
+        $validated = $request->validate([
+            'doctor_id' => 'required|exists:users,id',
+        ]);
+
+        $newDoctor = User::findOrFail($validated['doctor_id']);
+        if (!$newDoctor->hasRole('Doctor')) {
+            return back()->withErrors(['doctor_id' => 'Selected user is not a doctor.']);
+        }
+
+        // Check if the new doctor is on leave on the appointment date
+        $onLeave = \App\Models\DoctorLeave::where('doctor_id', $newDoctor->id)
+            ->where('leave_date', $appointment->appointment_date)
+            ->exists();
+
+        if ($onLeave) {
+            return back()->withErrors(['doctor_id' => 'Selected doctor is on leave on this date.']);
+        }
+
+        // Delete old zoom meeting if exists
+        if ($appointment->zoom_meeting_id) {
+            $this->deleteZoomMeeting($appointment);
+        }
+
+        // Reassign and reset to pending
+        $appointment->update([
+            'doctor_id' => $newDoctor->id,
+            'status' => 'pending',
+            'consultation_fee' => $newDoctor->consultation_fee ?? $appointment->consultation_fee,
+            'cancelled_at' => null,
+            'cancellation_reason' => null,
+            'confirmed_at' => null,
+            'zoom_meeting_id' => null,
+            'zoom_meeting_uuid' => null,
+            'zoom_join_url' => null,
+            'zoom_start_url' => null,
+            'zoom_meeting_password' => null,
+            'zoom_meeting_created_at' => null,
+            'zoom_meeting_status' => null,
+        ]);
+
+        return redirect()->route('appointments.show', $appointment)
+            ->with('success', 'Appointment reassigned to Dr. ' . $newDoctor->name . '. Status set to pending.');
     }
 
     /**

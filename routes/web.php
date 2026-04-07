@@ -20,6 +20,7 @@ use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ConsultationController;
+use App\Http\Controllers\DoctorLeaveController;
 
 // Public routes for invitation acceptance
 Route::get('/invitations/accept/{token}', [InvitationController::class, 'showAcceptForm'])->name('invitations.accept');
@@ -61,6 +62,10 @@ Route::middleware('auth')->group(function () {
         // Availability Routes
         Route::resource('availability', DoctorAvailabilityController::class);
         Route::get('/availability/slots/available', [DoctorAvailabilityController::class, 'getAvailableSlots'])->name('availability.get-slots');
+
+        // Leave Routes
+        Route::post('/leaves', [DoctorLeaveController::class, 'store'])->name('leaves.store');
+        Route::delete('/leaves/{doctorLeave}', [DoctorLeaveController::class, 'destroy'])->name('leaves.destroy');
     });
 
     // Patient routes
@@ -78,6 +83,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/appointments/slots/available', [AppointmentController::class, 'getAvailableSlots'])->name('appointments.available-slots');
     Route::post('/appointments/{appointment}/mark-paid', [AppointmentController::class, 'markPaymentReceived'])->name('appointments.mark-paid');
     Route::post('/appointments/{appointment}/create-zoom', [AppointmentController::class, 'createZoom'])->name('appointments.create-zoom');
+    Route::put('/appointments/{appointment}/reassign-doctor', [AppointmentController::class, 'reassignDoctor'])->name('appointments.reassign-doctor');
     Route::get('/appointments/{appointment}/invoice', [InvoiceController::class, 'show'])->name('appointments.invoice');
 
     // Medical Records routes

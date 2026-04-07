@@ -41,8 +41,17 @@ class DoctorAvailability extends BaseModel
      */
     public static function getAvailableSlotsForDate($doctorId, $date): array
     {
+        // Check if doctor is on leave for this date
+        $onLeave = DoctorLeave::where('doctor_id', $doctorId)
+            ->where('leave_date', $date)
+            ->exists();
+
+        if ($onLeave) {
+            return [];
+        }
+
         $dayOfWeek = strtolower(Carbon::parse($date)->format('l'));
-        
+
         // Check for specific date override first
         $specificAvailability = self::where('doctor_id', $doctorId)
             ->where('specific_date', $date)
