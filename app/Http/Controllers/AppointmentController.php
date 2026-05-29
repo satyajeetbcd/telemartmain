@@ -239,6 +239,13 @@ class AppointmentController extends Controller
             'appointment_time' => 'nullable|date_format:H:i',
         ]);
 
+        // Payment is mandatory before an appointment can be confirmed.
+        if ($validated['status'] === 'confirmed' && $appointment->status !== 'confirmed'
+            && $appointment->payment_status !== 'paid') {
+            return redirect()->back()
+                ->with('error', 'This appointment cannot be confirmed until the consultation fee is paid.');
+        }
+
         // Update timestamps based on status
         if ($validated['status'] === 'confirmed' && $appointment->status !== 'confirmed') {
             $validated['confirmed_at'] = now();

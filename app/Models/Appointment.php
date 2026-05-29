@@ -89,6 +89,22 @@ class Appointment extends BaseModel
     }
 
     /**
+     * Get all payment attempts for this appointment
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get the most recent payment attempt for this appointment
+     */
+    public function latestPayment()
+    {
+        return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
+    /**
      * Generate unique appointment number
      */
     public static function generateAppointmentNumber(): string

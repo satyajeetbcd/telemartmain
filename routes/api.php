@@ -6,10 +6,14 @@ use App\Http\Controllers\Api\ApiAuthController;
 use App\Http\Controllers\Api\ApiPatientController;
 use App\Http\Controllers\Api\ApiStatsController;
 use App\Http\Controllers\Api\SmsController;
+use App\Http\Controllers\Api\RazorpayPaymentController;
 use App\Http\Controllers\ZoomWebhookController;
 
 // Zoom webhook (verified by HMAC signature, no auth middleware)
 Route::post('/zoom/webhook', [ZoomWebhookController::class, 'handle']);
+
+// Razorpay webhook (verified by HMAC signature, no auth middleware)
+Route::post('/payments/webhook', [RazorpayPaymentController::class, 'webhook']);
 
 // Authenticated user (for backend/admin usage)
 Route::get('/user', function (Request $request) {
@@ -52,4 +56,9 @@ Route::middleware('patient.token')->group(function () {
     Route::get('/patient/prescriptions', [ApiPatientController::class, 'prescriptions']);
     Route::get('/patient/prescriptions/{id}/pdf', [ApiPatientController::class, 'prescriptionPdf']);
     Route::get('/patient/dashboard-stats', [ApiPatientController::class, 'dashboardStats']);
+
+    // Razorpay payments
+    Route::post('/patient/payments/create-order', [RazorpayPaymentController::class, 'createOrder']);
+    Route::post('/patient/payments/verify', [RazorpayPaymentController::class, 'verifyPayment']);
+    Route::get('/patient/payments', [RazorpayPaymentController::class, 'index']);
 });

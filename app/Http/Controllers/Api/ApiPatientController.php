@@ -142,6 +142,7 @@ class ApiPatientController extends Controller
                     'appointment_date' => $apt->appointment_date->format('M d, Y'),
                     'appointment_time' => date('h:i A', strtotime($apt->appointment_time)),
                     'status' => $apt->status,
+                    'payment_status' => $apt->payment_status,
                     'consultation_fee' => $apt->consultation_fee ? '₹' . number_format($apt->consultation_fee, 2) : 'N/A',
                     'reason' => $apt->reason,
                     'zoom_join_url' => $apt->zoom_join_url,

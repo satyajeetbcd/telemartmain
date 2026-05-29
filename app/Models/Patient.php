@@ -81,6 +81,14 @@ class Patient extends BaseModel
     }
 
     /**
+     * Get the payment transaction log for this patient
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
      * Get the full name attribute
      */
     public function getFullNameAttribute(): string
