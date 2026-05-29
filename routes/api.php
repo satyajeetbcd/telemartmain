@@ -24,6 +24,7 @@ Route::get('/user', function (Request $request) {
 Route::post('/patient/login', [ApiAuthController::class, 'login']);
 Route::post('/patient/register', [ApiAuthController::class, 'register']);
 Route::get('/stats', [ApiStatsController::class, 'index']);
+Route::get('/doctors', [ApiStatsController::class, 'doctors']);
 
 // SMS & OTP endpoints (public - for login/register flows)
 Route::post('/sms/send-otp', [SmsController::class, 'sendOtp']);

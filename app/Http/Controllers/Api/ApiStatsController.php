@@ -22,4 +22,34 @@ class ApiStatsController extends Controller
             'states' => 28,
         ]);
     }
+
+    /**
+     * Public list of verified doctors for the marketing site.
+     * "Verified" = active Doctor role with at least one approved KYC document.
+     */
+    public function doctors()
+    {
+        $doctors = User::role('Doctor')
+            ->where('status', 'active')
+            ->whereHas('kycDocuments', fn ($q) => $q->where('status', 'approved'))
+            ->orderBy('name')
+            ->limit(12)
+            ->get()
+            ->map(function ($doctor) {
+                return [
+                    'id' => $doctor->id,
+                    'name' => $doctor->name,
+                    'specialization' => $doctor->specialization ?: 'General Medicine',
+                    'qualifications' => $doctor->qualifications,
+                    'experience_years' => $doctor->experience_years,
+                    'consultation_fee' => $doctor->consultation_fee
+                        ? number_format($doctor->consultation_fee, 2)
+                        : null,
+                    'profile_image' => $doctor->profile_image, // raw storage path; frontend builds the URL
+                    'verified' => true,
+                ];
+            });
+
+        return response()->json(['doctors' => $doctors]);
+    }
 }
