@@ -6,8 +6,7 @@
 <div class="max-w-7xl mx-auto space-y-6">
     <!-- Profile Header -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-green-500 to-green-600 h-32"></div>
-        <div class="px-6 pb-6 -mt-16">
+        <div class="px-6 py-6">
             <div class="flex items-end justify-between">
                 <div class="flex items-end space-x-6">
                     <div class="bg-white rounded-full p-2 shadow-lg">
